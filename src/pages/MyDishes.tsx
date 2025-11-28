@@ -1,5 +1,4 @@
 import { useLoaderData, Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
 import type { Dish } from '../utils/services/dish.service';
 
 interface LoaderData {
@@ -123,7 +122,6 @@ const RejectedIcon = ({ size = 16 }: { size?: number }) => (
 export default function MyDishes() {
   const { dishes } = useLoaderData() as LoaderData;
   const navigate = useNavigate();
-  const { user } = useAuth();
 
   const statusColors = {
     ACCEPTED: 'rgba(79, 180, 119, 0.85)',

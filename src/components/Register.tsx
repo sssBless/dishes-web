@@ -1,7 +1,7 @@
 import { Form, Link, useActionData, useNavigation } from 'react-router-dom';
 
 export default function Register() {
-  const actionData = useActionData<{ error?: string }>();
+  const actionData = useActionData() as { error?: string };
   const navigation = useNavigation();
   const isSubmitting = navigation.state === 'submitting';
 
