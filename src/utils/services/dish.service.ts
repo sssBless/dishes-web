@@ -31,6 +31,9 @@ export interface Ingredient {
   breadUnitsIn1g: number;
   caloriesPer100g: number;
   unit?: string;
+  gramsPerPiece?: number;
+  caloriesPerPiece?: number;
+  densityGPerMl?: number;
 }
 
 export interface DishIngredientWithData {

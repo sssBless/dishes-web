@@ -16,7 +16,7 @@ export function useAuth() {
     isAuthenticated: auth.isAuthenticated,
     isLoading: auth.isLoading,
     isAdmin: auth.user?.role === 'ADMIN',
-    login: (token: string) => dispatch(login(token)),
+    login: (accessToken: string, refreshToken: string) => dispatch(login({ accessToken, refreshToken })),
     logout: () => dispatch(logout()),
     updateUser: (user: typeof auth.user) => {
       if (user) {

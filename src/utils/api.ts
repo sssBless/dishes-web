@@ -1,5 +1,6 @@
-import type {AxiosInstance} from 'axios';
+import type {AxiosInstance, AxiosRequestConfig} from 'axios';
 import axios from 'axios';
+import {refreshAccessToken, clearStoredTokens} from './authTokens';
 
 export interface RequestConfig {
   timeout?: number;
@@ -25,19 +26,35 @@ export default class BaseAPIService {
   private setupInterceptors(): void {
     this.axiosInstance.interceptors.response.use(
       response => response.data,
-      error => {
-        if (error.response?.status === 401) {
-          // Unauthorized - token might be expired
-          localStorage.removeItem('token');
-          this.clearAuthToken();
-          if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
-            window.location.href = '/login';
+      async error => {
+        const originalRequest = error.config as AxiosRequestConfig & {_retry?: boolean};
+
+        if (error.response?.status === 401 && !originalRequest._retry) {
+          originalRequest._retry = true;
+          const newToken = await refreshAccessToken();
+
+          if (newToken) {
+            this.setAuthToken(newToken);
+            originalRequest.headers = originalRequest.headers || {};
+            originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+            return this.axiosInstance(originalRequest);
           }
+
+          this.handleUnauthorized();
         }
+
         const message = error.response?.data?.message || error.message;
         throw new Error(message);
       }
     );
+  }
+
+  private handleUnauthorized() {
+    clearStoredTokens();
+    this.clearAuthToken();
+    if (typeof window !== 'undefined' && window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+      window.location.href = '/login';
+    }
   }
 
   public setAuthToken(token: string): void {

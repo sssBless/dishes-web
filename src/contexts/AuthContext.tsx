@@ -1,7 +1,8 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { apiService } from '../utils/services/api.service';
 import type { User } from '../utils/services/user.service';
 import { jwtDecode } from 'jwt-decode';
+import { getAccessToken, subscribeToAccessToken, setTokens as persistTokens, clearStoredTokens } from '../utils/authTokens';
 
 interface AuthContextType {
   user: User | null;
@@ -9,7 +10,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   isAdmin: boolean;
-  login: (token: string) => void;
+  login: (accessToken: string, refreshToken: string) => void;
   logout: () => void;
   updateUser: (user: User) => void;
 }
@@ -30,56 +31,59 @@ interface JwtPayload {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
+  const [token, setToken] = useState<string | null>(getAccessToken());
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    if (storedToken) {
-      try {
-        const decoded = jwtDecode<JwtPayload>(storedToken);
-        setUser({
-          id: decoded.id,
-          email: decoded.email,
-          username: decoded.username,
-          role: decoded.role,
-          createdAt: '',
-          updatedAt: '',
-        });
-        apiService.setToken(storedToken);
-      } catch (error) {
-        console.error('Invalid token:', error);
-        localStorage.removeItem('token');
-        setToken(null);
+    const applyToken = (value: string | null) => {
+      if (value) {
+        try {
+          const decoded = jwtDecode<JwtPayload>(value);
+          setUser({
+            id: decoded.id,
+            email: decoded.email,
+            username: decoded.username,
+            role: decoded.role,
+            createdAt: '',
+            updatedAt: '',
+          });
+          apiService.setToken(value);
+        } catch (error) {
+          console.error('Invalid token:', error);
+          clearStoredTokens();
+          setToken(null);
+          setUser(null);
+        }
+      } else {
+        setUser(null);
+        apiService.logout();
       }
-    }
+    };
+
+    const initialToken = getAccessToken();
+    setToken(initialToken);
+    applyToken(initialToken);
     setIsLoading(false);
+
+    const unsubscribe = subscribeToAccessToken((updatedToken) => {
+      setToken(updatedToken);
+      applyToken(updatedToken);
+    });
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
-  const login = (newToken: string) => {
-    try {
-      const decoded = jwtDecode<JwtPayload>(newToken);
-      setToken(newToken);
-      setUser({
-        id: decoded.id,
-        email: decoded.email,
-        username: decoded.username,
-        role: decoded.role,
-        createdAt: '',
-        updatedAt: '',
-      });
-      localStorage.setItem('token', newToken);
-      apiService.setToken(newToken);
-    } catch (error) {
-      console.error('Invalid token:', error);
-    }
+  const login = (accessToken: string, refreshToken: string) => {
+    persistTokens(accessToken, refreshToken);
   };
 
   const logout = () => {
+    clearStoredTokens();
     setToken(null);
     setUser(null);
-    localStorage.removeItem('token');
     apiService.logout();
   };
 

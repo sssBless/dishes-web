@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Form, useLoaderData, useActionData, useNavigation, useRevalidator, useNavigate } from 'react-router-dom';
 import type { Dish } from '../utils/services/dish.service';
 import type { User } from '../utils/services/user.service';
@@ -6,8 +6,8 @@ import { useAppSelector, useAppDispatch } from '../store/hooks';
 import {
   setAdminSearchQuery,
   setAdminStatusFilter,
-  resetAdminFilters,
 } from '../store/slices/filtersSlice';
+import { type Ingredient } from '../utils/services/ingredients.service';
 
 interface LoaderData {
   dishes: Dish[];
@@ -89,7 +89,7 @@ export default function AdminPanel() {
   const navigation = useNavigation();
   const revalidator = useRevalidator();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'dishes' | 'users'>('dishes');
+  const [activeTab, setActiveTab] = useState<'dishes' | 'users' | 'ingredients'>('dishes');
   const dispatch = useAppDispatch();
   const adminFilters = useAppSelector((state) => state.filters.admin);
   const { searchQuery, statusFilter } = adminFilters;
@@ -168,6 +168,13 @@ export default function AdminPanel() {
             style={{ padding: '0.75rem 1.5rem' }}
           >
             Пользователи
+          </button>
+          <button
+            onClick={() => setActiveTab('ingredients')}
+            className={activeTab === 'ingredients' ? 'btn-primary' : 'btn-outline'}
+            style={{ padding: '0.75rem 1.5rem' }}
+          >
+            Ингредиенты
           </button>
           <div style={{ flex: 1, maxWidth: '400px', marginLeft: 'auto' }}>
             <input
@@ -455,6 +462,212 @@ export default function AdminPanel() {
               </table>
             </div>
           )}
+        </div>
+      )}
+      
+      {activeTab === 'ingredients' && (
+        <IngredientsAdminBlock />
+      )}
+    </div>
+  );
+}
+
+function IngredientsAdminBlock() {
+  const [items, setItems] = useState<Array<(Ingredient & {
+    _dirty?: boolean;
+    _creating?: boolean;
+  })>>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const load = async () => {
+    setIsLoading(true); setError(null);
+    try {
+      const { apiService } = await import('../utils/services/api.service');
+      const data = await apiService.ingredientsService.getAllIngredients();
+      setItems(data.map((i) => ({ ...i, _dirty: false })));
+    } catch (e: any) {
+      setError(e.message || 'Ошибка загрузки ингредиентов');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const updateField = (index: number, field: keyof Ingredient, value: any) => {
+    setItems(prev => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value, _dirty: true };
+      return next;
+    });
+  };
+
+  const addNew = () => {
+    setItems(prev => [
+      ...prev,
+      {
+        id: 0,
+        name: '',
+        abbreviation: '',
+        glycemicIndex: 0,
+        breadUnitsIn1g: 0,
+        caloriesPer100g: 0,
+        unit: 'г',
+        gramsPerPiece: undefined,
+        caloriesPerPiece: undefined,
+        densityGPerMl: undefined,
+        _dirty: true,
+        _creating: true,
+      } as any,
+    ]);
+  };
+
+  const saveRow = async (index: number) => {
+    const row = items[index];
+    if (!row.name || !row.abbreviation) {
+      alert('Имя и сокращение обязательны');
+      return;
+    }
+    setSaving(true); setError(null);
+    try {
+      const { apiService } = await import('../utils/services/api.service');
+      if (row._creating) {
+        const created = await apiService.ingredientsService.createIngredient({
+          name: row.name,
+          abbreviation: row.abbreviation,
+          glycemicIndex: Number(row.glycemicIndex) || 0,
+          breadUnitsIn1g: Number(row.breadUnitsIn1g) || 0,
+          caloriesPer100g: Number(row.caloriesPer100g) || 0,
+          unit: row.unit || 'г',
+          gramsPerPiece: row.gramsPerPiece != null ? Number(row.gramsPerPiece) : undefined,
+          caloriesPerPiece: row.caloriesPerPiece != null ? Number(row.caloriesPerPiece) : undefined,
+          densityGPerMl: row.densityGPerMl != null ? Number(row.densityGPerMl) : undefined,
+        });
+        setItems(prev => {
+          const next = [...prev];
+          next[index] = { ...(created as any), _dirty: false, _creating: false };
+          return next;
+        });
+      } else {
+        await apiService.ingredientsService.updateIngredient(row.id!, {
+          name: row.name,
+          abbreviation: row.abbreviation,
+          glycemicIndex: Number(row.glycemicIndex) || 0,
+          breadUnitsIn1g: Number(row.breadUnitsIn1g) || 0,
+          caloriesPer100g: Number(row.caloriesPer100g) || 0,
+          unit: row.unit || 'г',
+          gramsPerPiece: row.gramsPerPiece != null ? Number(row.gramsPerPiece) : undefined,
+          caloriesPerPiece: row.caloriesPerPiece != null ? Number(row.caloriesPerPiece) : undefined,
+          densityGPerMl: row.densityGPerMl != null ? Number(row.densityGPerMl) : undefined,
+        });
+        setItems(prev => {
+          const next = [...prev];
+          next[index] = { ...next[index], _dirty: false };
+          return next;
+        });
+      }
+    } catch (e: any) {
+      setError(e.message || 'Ошибка сохранения');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const removeRow = async (index: number) => {
+    const row = items[index];
+    if (row._creating) {
+      setItems(prev => prev.filter((_, i) => i !== index));
+      return;
+    }
+    if (!row.id) return;
+    if (!confirm('Удалить ингредиент?')) return;
+    setSaving(true); setError(null);
+    try {
+      const { apiService } = await import('../utils/services/api.service');
+      await apiService.ingredientsService.deleteIngredient(row.id);
+      setItems(prev => prev.filter((_, i) => i !== index));
+    } catch (e: any) {
+      setError(e.message || 'Ошибка удаления');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <h2 style={{ margin: 0 }}>Управление ингредиентами</h2>
+        <button onClick={addNew} className="btn-primary">+ Добавить</button>
+      </div>
+      {error && <div className="alert alert-error" style={{ marginBottom: '1rem' }}>{error}</div>}
+      {isLoading ? (
+        <div className="empty-state">Загрузка...</div>
+      ) : (
+        <div className="card" style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '900px' }}>
+            <thead>
+              <tr style={{ borderBottom: '2px solid var(--border-color)' }}>
+                <th style={{ padding: '0.5rem', textAlign: 'left' }}>Название</th>
+                <th style={{ padding: '0.5rem', textAlign: 'left' }}>Сокр.</th>
+                <th style={{ padding: '0.5rem', textAlign: 'left' }}>ГИ</th>
+                <th style={{ padding: '0.5rem', textAlign: 'left' }}>ХЕ в 1г</th>
+                <th style={{ padding: '0.5rem', textAlign: 'left' }}>ккал/100г</th>
+                <th style={{ padding: '0.5rem', textAlign: 'left' }}>Ед.</th>
+                <th style={{ padding: '0.5rem', textAlign: 'left' }}>г/шт</th>
+                <th style={{ padding: '0.5rem', textAlign: 'left' }}>ккал/шт</th>
+                <th style={{ padding: '0.5rem', textAlign: 'left' }}>г/мл</th>
+                <th style={{ padding: '0.5rem', textAlign: 'left' }}>Действия</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((row, index) => (
+                <tr key={row.id ?? `new-${index}`} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                  <td style={{ padding: '0.5rem' }}>
+                    <input value={row.name} onChange={(e) => updateField(index, 'name', e.target.value)} />
+                  </td>
+                  <td style={{ padding: '0.5rem' }}>
+                    <input value={row.abbreviation} onChange={(e) => updateField(index, 'abbreviation', e.target.value)} />
+                  </td>
+                  <td style={{ padding: '0.5rem' }}>
+                    <input type="number" value={row.glycemicIndex} onChange={(e) => updateField(index, 'glycemicIndex', Number(e.target.value))} />
+                  </td>
+                  <td style={{ padding: '0.5rem' }}>
+                    <input type="number" value={row.breadUnitsIn1g} step="0.001" onChange={(e) => updateField(index, 'breadUnitsIn1g', Number(e.target.value))} />
+                  </td>
+                  <td style={{ padding: '0.5rem' }}>
+                    <input type="number" value={row.caloriesPer100g} onChange={(e) => updateField(index, 'caloriesPer100g', Number(e.target.value))} />
+                  </td>
+                  <td style={{ padding: '0.5rem' }}>
+                    <input value={row.unit ?? ''} onChange={(e) => updateField(index, 'unit', e.target.value)} placeholder="г/мл/шт..." />
+                  </td>
+                  <td style={{ padding: '0.5rem' }}>
+                    <input type="number" value={row.gramsPerPiece ?? ''} onChange={(e) => updateField(index, 'gramsPerPiece', e.target.value === '' ? undefined : Number(e.target.value))} />
+                  </td>
+                  <td style={{ padding: '0.5rem' }}>
+                    <input type="number" value={row.caloriesPerPiece ?? ''} onChange={(e) => updateField(index, 'caloriesPerPiece', e.target.value === '' ? undefined : Number(e.target.value))} />
+                  </td>
+                  <td style={{ padding: '0.5rem' }}>
+                    <input type="number" step="0.001" value={row.densityGPerMl ?? ''} onChange={(e) => updateField(index, 'densityGPerMl', e.target.value === '' ? undefined : Number(e.target.value))} />
+                  </td>
+                  <td style={{ padding: '0.5rem', whiteSpace: 'nowrap' }}>
+                    <button
+                      className={row._dirty ? 'btn-primary' : 'btn-outline'}
+                      onClick={() => saveRow(index)}
+                      disabled={saving || !row._dirty}
+                      style={{ marginRight: '0.5rem' }}
+                    >
+                      Сохранить
+                    </button>
+                    <button className="btn-danger" onClick={() => removeRow(index)} disabled={saving}>
+                      Удалить
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

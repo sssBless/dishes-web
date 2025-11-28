@@ -2,6 +2,8 @@ import DishService from './dish.service';
 import UserService from './user.service';
 import IngredientsService from './ingredients.service';
 import NutrientsService from './nutrients.service';
+import { API_BASE_URL } from '../../config';
+import { subscribeToAccessToken, getAccessToken } from '../authTokens';
 
 export class APIService {
   public userService: UserService;
@@ -14,6 +16,14 @@ export class APIService {
     this.dishService = new DishService(baseURL, token);
     this.ingredientsService = new IngredientsService(baseURL, token);
     this.nutrientsService = new NutrientsService(baseURL, token);
+
+    subscribeToAccessToken((updatedToken) => {
+      if (updatedToken) {
+        this.setToken(updatedToken);
+      } else {
+        this.logout();
+      }
+    });
   }
 
   public setToken(token: string): void {
@@ -32,6 +42,6 @@ export class APIService {
 }
 
 export const apiService = new APIService(
-  'http://localhost:3000/api',
-  localStorage.getItem('token') || undefined
+  API_BASE_URL,
+  getAccessToken() || undefined
 );

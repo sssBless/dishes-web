@@ -25,17 +25,16 @@ interface LoaderData {
 }
 
 // Конвертация единиц измерения в граммы
-function convertToGrams(quantity: number, unit: string): number {
-  const conversionRates: { [key: string]: number } = {
-    'г': 1,
-    'мл': 1,
-    'шт': 0,
-    'ст.л.': 15,
-    'ч.л.': 5,
-    'стакан': 200,
-  };
-  
-  return quantity * (conversionRates[unit] || 1);
+function convertToGrams(quantity: number, unit: string, opts?: { gramsPerPiece?: number; densityGPerMl?: number }): number {
+  const u = unit?.toLowerCase() || 'г';
+  if (u === 'г' || u === 'g' || u === 'гр') return quantity;
+  if (u === 'кг') return quantity * 1000;
+  if (u === 'мл') return quantity * (opts?.densityGPerMl ?? 1);
+  if (u === 'шт') return quantity * (opts?.gramsPerPiece ?? 0);
+  if (u === 'ст.л.') return quantity * 15;
+  if (u === 'ч.л.') return quantity * 5;
+  if (u === 'стакан') return quantity * 200;
+  return quantity;
 }
 
 function calculateDishStats(dish: Dish): DishStats {
@@ -47,14 +46,19 @@ function calculateDishStats(dish: Dish): DishStats {
   dish.ingredients.forEach((di) => {
     const ingredient = di.ingredient;
     const unit = di.unit || 'г';
-    const quantityInGrams = convertToGrams(di.quantity, unit);
+    const quantityInGrams = convertToGrams(di.quantity, unit, {
+      gramsPerPiece: (ingredient as any).gramsPerPiece,
+      densityGPerMl: (ingredient as any).densityGPerMl,
+    });
     
     if (quantityInGrams <= 0) return; // Пропускаем ингредиенты с нулевым весом
     
     totalWeight += quantityInGrams;
     
     // Получаем калории из БД (caloriesPer100g из Ingredients)
-    if (ingredient.caloriesPer100g && ingredient.caloriesPer100g > 0) {
+    if (unit === 'шт' && (ingredient as any).caloriesPerPiece != null) {
+      calories += (ingredient as any).caloriesPerPiece * di.quantity;
+    } else if (ingredient.caloriesPer100g && ingredient.caloriesPer100g > 0) {
       calories += (ingredient.caloriesPer100g * quantityInGrams) / 100;
     }
     

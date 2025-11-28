@@ -1,6 +1,7 @@
 import { redirect } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import { apiService } from './services/api.service';
+import { setTokens } from './authTokens';
 import type { CreateDishInput, UpdateDishInput, DishIngredient } from './services/dish.service';
 
 // Action для логина
@@ -15,8 +16,7 @@ export async function loginAction({ request }: { request: Request }) {
 
   try {
     const response = await apiService.userService.login({ email, password });
-    localStorage.setItem('token', response.accessToken);
-    apiService.setToken(response.accessToken);
+    setTokens(response.accessToken, response.refreshToken);
     
     const redirectTo = new URL(request.url).searchParams.get('redirect') || '/';
     throw redirect(redirectTo);
@@ -55,8 +55,7 @@ export async function registerAction({ request }: { request: Request }) {
   try {
     await apiService.userService.register({ email, username, password });
     const response = await apiService.userService.login({ email, password });
-    localStorage.setItem('token', response.accessToken);
-    apiService.setToken(response.accessToken);
+    setTokens(response.accessToken, response.refreshToken);
     
     throw redirect('/');
   } catch (error: any) {

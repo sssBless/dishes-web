@@ -21,7 +21,7 @@ export default function Login() {
 
     try {
       const response = await apiService.userService.login(formData);
-      login(response.accessToken);
+      login(response.accessToken, response.refreshToken);
       navigate('/');
     } catch (err: any) {
       setError(err.message || 'Ошибка входа');

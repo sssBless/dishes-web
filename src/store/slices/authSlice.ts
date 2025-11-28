@@ -2,6 +2,7 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { User } from '../../utils/services/user.service';
 import { jwtDecode } from 'jwt-decode';
 import { apiService } from '../../utils/services/api.service';
+import { getAccessToken, setTokens, clearStoredTokens } from '../../utils/authTokens';
 
 interface JwtPayload {
   id: number;
@@ -33,37 +34,35 @@ const authSlice = createSlice({
   reducers: {
     // Инициализация из localStorage (вызывается после монтирования приложения)
     initializeAuth: (state) => {
-      if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
-        const token = localStorage.getItem('token');
-        if (token) {
-          try {
-            const decoded = jwtDecode<JwtPayload>(token);
-            state.user = {
-              id: decoded.id,
-              email: decoded.email,
-              username: decoded.username,
-              role: decoded.role,
-              createdAt: '',
-              updatedAt: '',
-            };
-            state.token = token;
-            state.isAuthenticated = true;
-            apiService.setToken(token);
-          } catch (error) {
-            console.error('Invalid token:', error);
-            localStorage.removeItem('token');
-            state.token = null;
-            state.user = null;
-            state.isAuthenticated = false;
-          }
+      const token = getAccessToken();
+      if (token) {
+        try {
+          const decoded = jwtDecode<JwtPayload>(token);
+          state.user = {
+            id: decoded.id,
+            email: decoded.email,
+            username: decoded.username,
+            role: decoded.role,
+            createdAt: '',
+            updatedAt: '',
+          };
+          state.token = token;
+          state.isAuthenticated = true;
+          apiService.setToken(token);
+        } catch (error) {
+          console.error('Invalid token:', error);
+          clearStoredTokens();
+          state.token = null;
+          state.user = null;
+          state.isAuthenticated = false;
         }
       }
       state.isLoading = false;
     },
-    login: (state, action: PayloadAction<string>) => {
+    login: (state, action: PayloadAction<{accessToken: string; refreshToken: string}>) => {
+      const { accessToken, refreshToken } = action.payload;
       try {
-        const token = action.payload;
-        const decoded = jwtDecode<JwtPayload>(token);
+        const decoded = jwtDecode<JwtPayload>(accessToken);
         
         const user: User = {
           id: decoded.id,
@@ -74,13 +73,12 @@ const authSlice = createSlice({
           updatedAt: '',
         };
 
-        state.token = token;
+        state.token = accessToken;
         state.user = user;
         state.isAuthenticated = true;
-        
-        // Сохраняем токен в localStorage для API
-        localStorage.setItem('token', token);
-        apiService.setToken(token);
+
+        setTokens(accessToken, refreshToken);
+        apiService.setToken(accessToken);
       } catch (error) {
         console.error('Invalid token:', error);
         state.token = null;
@@ -92,7 +90,7 @@ const authSlice = createSlice({
       state.token = null;
       state.user = null;
       state.isAuthenticated = false;
-      localStorage.removeItem('token');
+      clearStoredTokens();
       apiService.logout();
     },
     updateUser: (state, action: PayloadAction<User>) => {

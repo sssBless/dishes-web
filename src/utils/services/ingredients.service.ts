@@ -8,6 +8,9 @@ export interface Ingredient {
   breadUnitsIn1g: number;
   caloriesPer100g: number;
   unit?: string;
+  gramsPerPiece?: number;
+  caloriesPerPiece?: number;
+  densityGPerMl?: number;
 }
 
 export interface CreateIngredientInput {
@@ -15,6 +18,11 @@ export interface CreateIngredientInput {
   abbreviation: string;
   glycemicIndex: number;
   breadUnitsIn1g: number;
+  caloriesPer100g: number;
+  unit?: string;
+  gramsPerPiece?: number;
+  caloriesPerPiece?: number;
+  densityGPerMl?: number;
 }
 
 export interface UpdateIngredientInput {
@@ -22,6 +30,11 @@ export interface UpdateIngredientInput {
   abbreviation?: string;
   glycemicIndex?: number;
   breadUnitsIn1g?: number;
+  caloriesPer100g?: number;
+  unit?: string;
+  gramsPerPiece?: number;
+  caloriesPerPiece?: number;
+  densityGPerMl?: number;
 }
 
 export default class IngredientsService extends BaseAPIService {
