@@ -114,4 +114,20 @@ export default class DishService extends BaseAPIService {
       },
     });
   }
+
+  public async addToFavorites(id: number): Promise<{ message: string }> {
+    return this.post<{ message: string }>(`/dishes/${id}/favorite`, {});
+  }
+
+  public async removeFromFavorites(id: number): Promise<{ message: string }> {
+    return this.delete<{ message: string }>(`/dishes/${id}/favorite`);
+  }
+
+  public async getFavoriteDishes(): Promise<Dish[]> {
+    return this.get<Dish[]>('/dishes/favorites');
+  }
+
+  public async checkFavorite(id: number): Promise<{ isFavorite: boolean }> {
+    return this.get<{ isFavorite: boolean }>(`/dishes/${id}/favorite`);
+  }
 }

@@ -14,12 +14,14 @@ import DishDetail from './pages/DishDetail';
 import DishForm from './pages/DishForm';
 import AdminPanel from './pages/AdminPanel';
 import MyDishes from './pages/MyDishes';
+import Favorites from './pages/Favorites';
 import {
   dishesLoader,
   dishLoader,
   dishFormLoader,
   adminLoader,
   myDishesLoader,
+  favoritesLoader,
 } from './utils/loaders';
 import {
   loginAction,
@@ -101,6 +103,15 @@ const router = createBrowserRouter([
           </ProtectedRoute>
         ),
         loader: myDishesLoader,
+      },
+      {
+        path: '/favorites',
+        element: (
+          <ProtectedRoute>
+            <Favorites />
+          </ProtectedRoute>
+        ),
+        loader: favoritesLoader,
       },
       {
         path: '/admin',

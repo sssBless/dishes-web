@@ -66,20 +66,36 @@ function Layout() {
                   Добавить блюдо
                 </NavLink>
                 {!isAdmin && (
-                  <NavLink 
-                    to="/my-dishes" 
-                    end
-                    style={({ isActive }) => ({ 
-                      color: isActive ? 'var(--accent-blue)' : 'var(--text-primary)',
-                      fontWeight: isActive ? '600' : '400',
-                      textDecoration: 'none',
-                      borderBottom: isActive ? '2px solid var(--accent-blue)' : '2px solid transparent',
-                      paddingBottom: '0.25rem',
-                      transition: 'all 0.2s',
-                    })}
-                  >
-                    Мои блюда
-                  </NavLink>
+                  <>
+                    <NavLink 
+                      to="/my-dishes" 
+                      end
+                      style={({ isActive }) => ({ 
+                        color: isActive ? 'var(--accent-blue)' : 'var(--text-primary)',
+                        fontWeight: isActive ? '600' : '400',
+                        textDecoration: 'none',
+                        borderBottom: isActive ? '2px solid var(--accent-blue)' : '2px solid transparent',
+                        paddingBottom: '0.25rem',
+                        transition: 'all 0.2s',
+                      })}
+                    >
+                      Мои блюда
+                    </NavLink>
+                    <NavLink 
+                      to="/favorites" 
+                      end
+                      style={({ isActive }) => ({ 
+                        color: isActive ? 'var(--accent-blue)' : 'var(--text-primary)',
+                        fontWeight: isActive ? '600' : '400',
+                        textDecoration: 'none',
+                        borderBottom: isActive ? '2px solid var(--accent-blue)' : '2px solid transparent',
+                        paddingBottom: '0.25rem',
+                        transition: 'all 0.2s',
+                      })}
+                    >
+                      Избранное
+                    </NavLink>
+                  </>
                 )}
                 {isAdmin && (
                   <NavLink 

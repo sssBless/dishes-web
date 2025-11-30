@@ -163,3 +163,17 @@ export async function myDishesLoader() {
   }
 }
 
+// Loader для страницы "Избранные блюда"
+export async function favoritesLoader() {
+  try {
+    await requireAuth();
+    const favorites = await apiService.dishService.getFavoriteDishes();
+    return { favorites };
+  } catch (error: any) {
+    if (error.status === 401 || error.message?.includes('401')) {
+      throw redirect('/login');
+    }
+    throw error;
+  }
+}
+
