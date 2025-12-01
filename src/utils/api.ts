@@ -29,6 +29,17 @@ export default class BaseAPIService {
       async error => {
         const originalRequest = error.config as AxiosRequestConfig & {_retry?: boolean};
 
+        // Handle network errors (server not available)
+        if (!error.response) {
+          if (error.code === 'ECONNREFUSED' || error.message?.includes('Network Error') || error.message?.includes('ERR_CONNECTION_REFUSED')) {
+            throw new Error('Сервер недоступен. Убедитесь, что сервер запущен на порту 3000.');
+          }
+          if (error.code === 'ETIMEDOUT' || error.message?.includes('timeout')) {
+            throw new Error('Превышено время ожидания ответа от сервера.');
+          }
+          throw new Error('Ошибка сети: ' + (error.message || 'Не удалось подключиться к серверу'));
+        }
+
         if (error.response?.status === 401 && !originalRequest._retry) {
           originalRequest._retry = true;
           const newToken = await refreshAccessToken();
@@ -43,7 +54,7 @@ export default class BaseAPIService {
           this.handleUnauthorized();
         }
 
-        const message = error.response?.data?.message || error.message;
+        const message = error.response?.data?.message || error.message || 'Произошла ошибка при выполнении запроса';
         throw new Error(message);
       }
     );

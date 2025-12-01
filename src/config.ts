@@ -1,2 +1,2 @@
-export const API_BASE_URL = 'https://dishes-server-pjla.onrender.com/api';
+export const API_BASE_URL = 'http://localhost:3000/api'; //'https://dishes-server-pjla.onrender.com/api';
 

@@ -206,9 +206,10 @@ const HeartIcon = ({ filled = false, size = 20 }: { filled?: boolean; size?: num
     viewBox="0 0 24 24" 
     fill={filled ? "currentColor" : "none"}
     stroke="currentColor" 
-    strokeWidth="2.5"
+    strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
+    style={{ display: 'block' }}
   >
     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
   </svg>
@@ -239,6 +240,9 @@ export default function DishDetail() {
 
   const handleToggleFavorite = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
+    e.stopPropagation();
+    if (isLoadingFavorite) return;
+    
     setIsLoadingFavorite(true);
     try {
       if (isFavorite) {
@@ -248,9 +252,10 @@ export default function DishDetail() {
         await apiService.dishService.addToFavorites(dish.id);
         setIsFavorite(true);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to toggle favorite:', error);
-      alert('Не удалось изменить статус избранного');
+      const errorMessage = error?.response?.data?.message || error?.message || 'Не удалось изменить статус избранного';
+      alert(errorMessage);
     } finally {
       setIsLoadingFavorite(false);
     }
@@ -341,7 +346,7 @@ export default function DishDetail() {
             )}
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            {!isAdmin && (
+            {!isAdmin && user && (
               <button
                 onClick={handleToggleFavorite}
                 disabled={isLoadingFavorite}
@@ -358,6 +363,7 @@ export default function DishDetail() {
                   cursor: isLoadingFavorite ? 'not-allowed' : 'pointer',
                   transition: 'all 0.2s ease',
                   opacity: isLoadingFavorite ? 0.6 : 1,
+                  padding: 0,
                 }}
                 onMouseEnter={(e) => {
                   if (!isLoadingFavorite) {

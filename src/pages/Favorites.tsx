@@ -3,6 +3,22 @@ import { useLoaderData, useNavigate } from 'react-router-dom';
 import type { Dish } from '../utils/services/dish.service';
 import {apiService} from '../utils/services/api.service';
 
+const HeartIcon = ({ filled = false, size = 16 }: { filled?: boolean; size?: number }) => (
+  <svg 
+    width={size} 
+    height={size} 
+    viewBox="0 0 24 24" 
+    fill={filled ? "currentColor" : "none"}
+    stroke="currentColor" 
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ display: 'block' }}
+  >
+    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+  </svg>
+);
+
 interface LoaderData {
   favorites: Dish[];
 }
@@ -138,12 +154,11 @@ export default function Favorites() {
                   justifyContent: 'center',
                   zIndex: 10,
                   boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                  padding: 0,
                 }}
                 title="Удалить из избранного"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+                <HeartIcon filled={true} size={16} />
               </button>
 
               {dish.imageUrl && (
