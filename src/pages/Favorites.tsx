@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useLoaderData, useNavigate } from 'react-router-dom';
 import type { Dish } from '../utils/services/dish.service';
 import {apiService} from '../utils/services/api.service';
+import { buildImageUrl } from '../config';
 
 const HeartIcon = ({ filled = false, size = 16 }: { filled?: boolean; size?: number }) => (
   <svg 
@@ -161,9 +162,9 @@ export default function Favorites() {
                 <HeartIcon filled={true} size={16} />
               </button>
 
-              {dish.imageUrl && (
+              {buildImageUrl(dish.imageUrl) && (
                 <img
-                  src={`http://localhost:3000${dish.imageUrl}`}
+                  src={buildImageUrl(dish.imageUrl) ?? undefined}
                   alt={dish.name}
                   style={{
                     width: '100%',

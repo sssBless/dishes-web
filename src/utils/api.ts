@@ -32,7 +32,7 @@ export default class BaseAPIService {
         // Handle network errors (server not available)
         if (!error.response) {
           if (error.code === 'ECONNREFUSED' || error.message?.includes('Network Error') || error.message?.includes('ERR_CONNECTION_REFUSED')) {
-            throw new Error('Сервер недоступен. Убедитесь, что сервер запущен на порту 3000.');
+            throw new Error('Сервер недоступен. Убедитесь, что сервер запущен на порту 10000.');
           }
           if (error.code === 'ETIMEDOUT' || error.message?.includes('timeout')) {
             throw new Error('Превышено время ожидания ответа от сервера.');

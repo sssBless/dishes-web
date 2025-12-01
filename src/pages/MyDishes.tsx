@@ -1,5 +1,6 @@
 import { useLoaderData, Link, useNavigate } from 'react-router-dom';
 import type { Dish } from '../utils/services/dish.service';
+import { buildImageUrl } from '../config';
 
 interface LoaderData {
   dishes: Dish[];
@@ -202,9 +203,9 @@ export default function MyDishes() {
                   <StatusIconComponent size={18} />
                 </div>
 
-                {dish.imageUrl && (
+                {buildImageUrl(dish.imageUrl) && (
                   <img
-                    src={`http://localhost:3000${dish.imageUrl}`}
+                    src={buildImageUrl(dish.imageUrl) ?? undefined}
                     alt={dish.name}
                     style={{
                       width: '100%',

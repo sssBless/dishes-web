@@ -12,6 +12,7 @@ import {
   setDishStatusFilter,
   resetDishFilters,
 } from '../store/slices/filtersSlice';
+import { buildImageUrl } from '../config';
 
 interface DishStats {
   calories: number;
@@ -347,9 +348,9 @@ export default function DishList() {
                   </div>
                 )}
 
-                {dish.imageUrl && (
+                {buildImageUrl(dish.imageUrl) && (
                   <img
-                    src={`http://localhost:3000${dish.imageUrl}`}
+                    src={buildImageUrl(dish.imageUrl) ?? undefined}
                     alt={dish.name}
                     style={{
                       width: '100%',

@@ -4,6 +4,7 @@ import type { Dish } from '../utils/services/dish.service';
 import { useAuth } from '../hooks/useAuth';
 import {apiService} from '../utils/services/api.service';
 import deleteIcon from '../assets/delete-icon.svg';
+import { buildImageUrl } from '../config';
 
 interface LoaderData {
   dish: Dish;
@@ -501,9 +502,9 @@ export default function DishDetail() {
           </div>
         </div>
 
-        {dish.imageUrl && (
+        {buildImageUrl(dish.imageUrl) && (
           <img
-            src={`http://localhost:3000${dish.imageUrl}`}
+            src={buildImageUrl(dish.imageUrl) ?? undefined}
             alt={dish.name}
             style={{
               width: '100%',

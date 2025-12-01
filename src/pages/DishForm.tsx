@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import type { Dish } from '../utils/services/dish.service';
 import type { Ingredient } from '../utils/services/ingredients.service';
 import styles from './DishForm.module.css';
+import { buildImageUrl } from '../config';
 
 interface LoaderData {
   dish: Dish | null;
@@ -137,12 +138,12 @@ export default function DishForm() {
             <label htmlFor="image" className={styles.label}>
               Изображение
             </label>
-            {isEdit && dish?.imageUrl && (
+            {isEdit && buildImageUrl(dish?.imageUrl) && (
               <div className={styles.imagePreview}>
                 <span className={styles.imagePreviewLabel}>Текущее изображение:</span>
                 <img
-                  src={`http://localhost:3000${dish.imageUrl}`}
-                  alt={dish.name}
+                  src={buildImageUrl(dish?.imageUrl) ?? undefined}
+                  alt={dish?.name || ''}
                   className={styles.imagePreviewImg}
                 />
               </div>
