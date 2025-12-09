@@ -1,73 +1,160 @@
-# React + TypeScript + Vite
+# Клиентская часть приложения (Frontend)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Веб-приложение на React с использованием Vite, Redux Toolkit и React Router.
 
-Currently, two official plugins are available:
+## Требования
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Node.js 18+
+- npm или yarn
 
-## React Compiler
+## Установка
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+1. Перейдите в директорию проекта:
+```bash
+cd 100euro_web
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+2. Установите зависимости:
+```bash
+npm install
 ```
+
+## Конфигурация
+
+Перед запуском необходимо настроить URL API сервера.
+
+Откройте файл `src/config.ts` и измените значения:
+
+```typescript
+export const API_BASE_URL = 'http://localhost:10000/api';
+export const IMAGE_URL = 'http://localhost:10000';
+```
+
+**Для продакшн:**
+Замените `http://localhost:10000` на URL вашего развернутого сервера.
+
+### Использование переменных окружения (опционально)
+
+Для более гибкой настройки можно использовать переменные окружения. Создайте файл `.env`:
+
+```env
+VITE_API_BASE_URL=http://localhost:10000/api
+VITE_IMAGE_URL=http://localhost:10000
+```
+
+И обновите `src/config.ts`:
+
+```typescript
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:10000/api';
+export const IMAGE_URL = import.meta.env.VITE_IMAGE_URL || 'http://localhost:10000';
+```
+
+## Запуск
+
+### Режим разработки
+
+Запустите dev-сервер с hot-reload:
+
+```bash
+npm run dev
+```
+
+Приложение будет доступно по адресу `http://localhost:5173` (или другому порту, если 5173 занят).
+
+### Сборка для продакшн
+
+1. Соберите проект:
+```bash
+npm run build
+```
+
+2. Файлы для развертывания будут в директории `dist/`
+
+3. Для предварительного просмотра продакшн сборки:
+```bash
+npm run preview
+```
+## Структура проекта
+
+```
+100euro_web/
+├── src/
+│   ├── components/        # React компоненты
+│   │   ├── AuthInitializer.tsx
+│   │   ├── ErrorBoundary.tsx
+│   │   ├── Layout.tsx
+│   │   ├── Login.tsx
+│   │   ├── ProtectedRoute.tsx
+│   │   └── Register.tsx
+│   ├── contexts/          # React контексты
+│   │   └── AuthContext.tsx
+│   ├── hooks/             # Кастомные хуки
+│   │   └── useAuth.ts
+│   ├── pages/             # Страницы приложения
+│   │   ├── AdminPanel.tsx
+│   │   ├── DishDetail.tsx
+│   │   ├── DishForm.tsx
+│   │   ├── DishList.tsx
+│   │   ├── Favorites.tsx
+│   │   └── MyDishes.tsx
+│   ├── store/             # Redux store
+│   │   ├── hooks.ts
+│   │   ├── index.ts
+│   │   └── slices/
+│   ├── utils/             # Утилиты
+│   │   ├── actions.ts
+│   │   ├── api.ts
+│   │   ├── authTokens.ts
+│   │   ├── loaders.ts
+│   │   └── services/
+│   ├── config.ts          # Конфигурация API
+│   ├── index.css          # Глобальные стили
+│   └── main.tsx           # Точка входа
+├── dist/                  # Собранные файлы (генерируется)
+├── index.html
+├── vite.config.ts
+└── package.json
+```
+
+## Основные функции
+
+- 🔐 Регистрация и авторизация пользователей
+- 🍽️ Просмотр списка блюд
+- 📝 Создание и редактирование блюд
+- ❤️ Добавление блюд в избранное
+- 👤 Личный кабинет пользователя
+- 🔧 Панель администратора (для админов)
+- 🖼️ Загрузка и отображение изображений блюд
+
+## Скрипты
+
+| Команда | Описание |
+|---------|----------|
+| `npm run dev` | Запуск dev-сервера с hot-reload |
+| `npm run build` | Сборка проекта для продакшн |
+| `npm run preview` | Предпросмотр продакшн сборки |
+| `npm run lint` | Проверка кода линтером |
+
+## Troubleshooting
+
+### Проблема: Ошибки подключения к API
+
+- Убедитесь, что сервер запущен и доступен
+- Проверьте значение `API_BASE_URL` в `src/config.ts`
+- Проверьте CORS настройки на сервере
+- Проверьте, что сервер принимает запросы с вашего домена/порта
+
+## Технологии
+
+- **React 19** - UI библиотека
+- **Vite** - Сборщик и dev-сервер
+- **TypeScript** - Типизация
+- **Redux Toolkit** - Управление состоянием
+- **React Router** - Роутинг
+- **Axios** - HTTP клиент
+
+## Дополнительная информация
+
+- Документация React: https://react.dev/
+- Документация Vite: https://vitejs.dev/
+- Документация Redux Toolkit: https://redux-toolkit.js.org/
